@@ -36,15 +36,19 @@ Onia2MuMuPAT::Onia2MuMuPAT(const edm::ParameterSet& iConfig):
   addMuonlessPrimaryVertex_(iConfig.getParameter<bool>("addMuonlessPrimaryVertex")),
   resolveAmbiguity_(iConfig.getParameter<bool>("resolvePileUpAmbiguity")),
   addMCTruth_(iConfig.getParameter<bool>("addMCTruth"))
-{
+{  
     revtxtrks_ = consumes<reco::TrackCollection>((edm::InputTag)"generalTracks"); //if that is not true, we will raise an exception
     revtxbs_ = consumes<reco::BeamSpot>((edm::InputTag)"offlineBeamSpot");
     produces<pat::CompositeCandidateCollection>();  
 }
 
 
-Onia2MuMuPAT::~Onia2MuMuPAT() 
+Onia2MuMuPAT::~Onia2MuMuPAT()
 {
+ 
+   // do anything here that needs to be done at desctruction time
+   // (e.g. close files, deallocate resources etc.)
+
 }
 
 
@@ -130,8 +134,15 @@ Onia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	TransientVertex myVertex = vtxFitter.vertex(t_tks);
 
 	CachingVertex<5> VtxForInvMass = vtxFitter.vertex( t_tks );
-	Measurement1D MassWErr = massCalculator.invariantMass( VtxForInvMass, muMasses );
-	
+
+        Measurement1D MassWErr(jpsi.M(),-9999.);
+        try {
+	  MassWErr = massCalculator.invariantMass( VtxForInvMass, muMasses );
+        } catch (std::exception & err) {
+          std::cout << " Field is 0, invalidating vertex " << std::endl;
+          myVertex = TransientVertex();                      // with no arguments it is invalid
+        }
+
 	myCand.addUserFloat("MassErr",MassWErr.error());
 
 	if (myVertex.isValid()) {
@@ -468,6 +479,17 @@ Onia2MuMuPAT::findJpsiMCInfo(reco::GenParticleRef genJpsi) {
   std::pair<int, float> result = std::make_pair(momJpsiID, trueLife);
   return result;
 
+}
+
+// ------------ method called once each job just before starting event loop  ------------
+void 
+Onia2MuMuPAT::beginJob()
+{
+}
+
+// ------------ method called once each job just after ending the event loop  ------------
+void 
+Onia2MuMuPAT::endJob() {
 }
 
 //define this as a plug-in
