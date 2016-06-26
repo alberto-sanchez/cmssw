@@ -37,10 +37,6 @@ ExternalDecaysStandalone::ExternalDecaysStandalone(edm::ParameterSet const & p) 
         << "which appears to be absent. Please add that service to your configuration\n"
         << "or remove the modules that require it.\n";
 
-    //CLHEP::HepRandomEngine *engine = new CLHEP::HepJamesRandom;
-    //engine->setSeed(123456789, 0);
-    //fDecayer->setRandomEngine(engine);
-
     //... declare output
     produces<edm::HepMCProduct>("unsmeared");
 
@@ -48,21 +44,12 @@ ExternalDecaysStandalone::ExternalDecaysStandalone(edm::ParameterSet const & p) 
 
 ExternalDecaysStandalone::~ExternalDecaysStandalone() {}
 
-void ExternalDecaysStandalone::beginRun(edm::Run const& run, const edm::EventSetup & es) {
-   //... Should be initialized only after setting Random Engine 
-   //fDecayer->init(es);
-}
+void ExternalDecaysStandalone::beginRun(edm::Run const& run, const edm::EventSetup & es) {}
 
 void ExternalDecaysStandalone::produce(edm::Event & iEvent, const edm::EventSetup & es) {
 
    //... set Random Engine. To be done for each event due to multithreading (?)
    edm::Service<edm::RandomNumberGenerator> rng;
-/*   if ( !rng.isAvailable() )
-     throw cms::Exception("Configuration")
-       << "The ExternalDecaysStandalone module requires the RandomNumberGeneratorService\n"
-       << "which appears to be absent. Please add that service to your configuration\n"
-       << "or remove the modules that require it.\n";*/
-
    CLHEP::HepRandomEngine *decayRandomEngine = &rng->getEngine(iEvent.streamID());
    fDecayer->setRandomEngine(decayRandomEngine);
 
