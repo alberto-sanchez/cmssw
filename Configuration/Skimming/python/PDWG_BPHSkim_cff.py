@@ -3,25 +3,9 @@ import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Reconstruction_cff import *
 
 # muons with trigger info
-import PhysicsTools.PatAlgos.producersLayer1.muonProducer_cfi
-oniaPATMuonsWithoutTrigger = PhysicsTools.PatAlgos.producersLayer1.muonProducer_cfi.patMuons.clone(
-    muonSource = 'muons',
-    embedTrack          = True,
-    embedCombinedMuon   = True,
-    embedStandAloneMuon = True,
-    embedPFCandidate    = False,
-    embedCaloMETMuonCorrs = cms.bool(False),
-    embedTcMETMuonCorrs   = cms.bool(False),
-    embedPfEcalEnergy     = cms.bool(False),
-    embedPickyMuon = False,
-    embedTpfmsMuon = False, 
-    userIsolation = cms.PSet(),   # no extra isolation beyond what's in reco::Muon itself
-    isoDeposits = cms.PSet(),     # no heavy isodeposits
-    addGenMatch = False,          # no mc
-)
-
+from HeavyFlavorAnalysis.Onia2MuMu.oniaPATMuonsWithTrigger_cff import *
 oniaSelectedMuons = cms.EDFilter('PATMuonSelector',
-   src = cms.InputTag('oniaPATMuonsWithoutTrigger'),
+   src = cms.InputTag('oniaPATMuonsWithTrigger'),
    cut = cms.string('muonID(\"TMOneStationTight\")'
                     ' && abs(innerTrack.dxy) < 0.3'
                     ' && abs(innerTrack.dz)  < 20.'
@@ -30,7 +14,7 @@ oniaSelectedMuons = cms.EDFilter('PATMuonSelector',
                     ' && innerTrack.quality(\"highPurity\")'
                     ' && ((abs(eta) <= 0.9 && pt > 2.5) || (0.9 < abs(eta) <= 2.4 && pt > 1.5))'
    ),
-   filter = cms.bool(True)
+   filter = cms.bool(False)
 )
 
 # tracks
@@ -48,12 +32,6 @@ onia2MuMuPAT.primaryVertexTag=cms.InputTag('offlinePrimaryVertices')
 onia2MuMuPAT.beamSpotTag=cms.InputTag('offlineBeamSpot')
 onia2MuMuPAT.dimuonSelection=cms.string("0.2 < mass && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")
 onia2MuMuPAT.addMCTruth = cms.bool(False)
-
-onia2MuMuPATCounter = cms.EDFilter('CandViewCountFilter',
-      src = cms.InputTag('onia2MuMuPAT'),
-      minNumber = cms.uint32(1),
-      filter = cms.bool(True)
-   )
 
 # make photon candidate conversions for P-wave studies
 from HeavyFlavorAnalysis.Onia2MuMu.OniaPhotonConversionProducer_cfi import PhotonCandidates as oniaPhotonCandidates
@@ -76,15 +54,16 @@ BPHSkim_EventContent = cms.PSet(
                      'keep *_oniaPhotonCandidates_*_*',
                      'keep *_onia2MuMuPAT_*_*',
                      'keep *_oniaV0Tracks_*_*',
-                     'keep PileupSummaryInfos_*_*_*'
+                     'keep PileupSummaryInfos_*_*_*',
+                     'keep *_genParticles_*_SIM',
+                     'keep GenEventInfoProduct_generator_*_SIM'
      )
 )
 
 BPHSkimSequence = cms.Sequence(
-            oniaPATMuonsWithoutTrigger *
+            oniaPATMuonsWithTriggerSequence *
 	    oniaSelectedMuons *
             onia2MuMuPAT *
-	    onia2MuMuPATCounter *
 	    oniaPhotonCandidates *
 	    oniaV0Tracks *
 	    oniaSelectedTracks
