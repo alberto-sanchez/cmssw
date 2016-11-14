@@ -3,25 +3,9 @@ import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Reconstruction_cff import *
 
 # muons with trigger info
-import PhysicsTools.PatAlgos.producersLayer1.muonProducer_cfi
-oniaPATMuonsWithoutTrigger = PhysicsTools.PatAlgos.producersLayer1.muonProducer_cfi.patMuons.clone(
-    muonSource = 'muons',
-    embedTrack          = True,
-    embedCombinedMuon   = True,
-    embedStandAloneMuon = True,
-    embedPFCandidate    = False,
-    embedCaloMETMuonCorrs = cms.bool(False),
-    embedTcMETMuonCorrs   = cms.bool(False),
-    embedPfEcalEnergy     = cms.bool(False),
-    embedPickyMuon = False,
-    embedTpfmsMuon = False, 
-    userIsolation = cms.PSet(),   # no extra isolation beyond what's in reco::Muon itself
-    isoDeposits = cms.PSet(),     # no heavy isodeposits
-    addGenMatch = False,          # no mc
-)
-
+from HeavyFlavorAnalysis.Onia2MuMu.oniaPATMuonsWithTrigger_cff import *
 oniaSelectedMuons = cms.EDFilter('PATMuonSelector',
-   src = cms.InputTag('oniaPATMuonsWithoutTrigger'),
+   src = cms.InputTag('oniaPATMuonsWithTrigger'),
    cut = cms.string('muonID(\"TMOneStationTight\")'
                     ' && abs(innerTrack.dxy) < 0.3'
                     ' && abs(innerTrack.dz)  < 20.'
@@ -81,7 +65,7 @@ BPHSkim_EventContent = cms.PSet(
 )
 
 BPHSkimSequence = cms.Sequence(
-            oniaPATMuonsWithoutTrigger *
+            oniaPATMuonsWithTriggerSequence *
 	    oniaSelectedMuons *
             onia2MuMuPAT *
 	    onia2MuMuPATCounter *
