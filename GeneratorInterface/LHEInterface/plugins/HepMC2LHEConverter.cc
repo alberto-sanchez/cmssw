@@ -30,6 +30,7 @@ class HepMC2LHEConverter : public edm::EDProducer {
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
 
   edm::InputTag _fSourceTag;
+  int ii;
 };
 
 
@@ -41,6 +42,7 @@ HepMC2LHEConverter::HepMC2LHEConverter(const edm::ParameterSet &p) {
     //... declare output
     //produces<LHERunInfoProduct, edm::InRun>();
     produces<LHEEventProduct>();
+    ii = 0;
 }
 
 HepMC2LHEConverter::~HepMC2LHEConverter() {}
@@ -58,23 +60,24 @@ void HepMC2LHEConverter::produce(edm::Event & iEvent, const edm::EventSetup & es
    HepMC::GenEvent *evt = new HepMC::GenEvent(*HepMCevent->GetEvent());
    lhef::HEPEUP hepeup_ = lhef::HEPEUP();
    int nup_ = 0;
-   for (HepMC::GenEvent::particle_const_iterator p = evt->particles_begin(); p != evt->particles_end(); ++p){
-      if ((*p)->status() != 1) continue;
+   for (HepMC::GenEvent::particle_const_iterator p = evt->particles_begin(); p != evt->particles_end(); ++p) {
+      if ((*p)->status() != 1 && (*p)->status() != 4) continue;
+      if (ii == 0) std::cout << (*p)->status()  << " " << (*p)->pdg_id() << " " << (*p)->momentum().px() << " " << (*p)->momentum().py() << " " << (*p)->momentum().pz() << " " << (*p)->momentum().e() << " " << (*p)->generated_mass()  << std::endl;
       nup_++;
       hepeup_.IDUP.push_back((*p)->pdg_id());
       hepeup_.ISTUP.push_back((*p)->status());
       lhef::HEPEUP::FiveVector pup_ = {{(*p)->momentum().px(),(*p)->momentum().py(),(*p)->momentum().pz(),(*p)->momentum().e(),(*p)->generated_mass()}};
       hepeup_.PUP.push_back(pup_);     
-      std::cout << (*p)->status()  << " " << abs((*p)->pdg_id()) << " " << (*p)->momentum().perp() << " " << fabs((*p)->momentum().eta()) << std::endl;
    }
    hepeup_.NUP = nup_;
+   std::cout << nup_ << " " << hepeup_.IDUP.size() << std::endl;
 
    //... store output
  //  std::auto_ptr<LHERunInfoProduct> lherun(new LHERunInfoProduct());
    std::auto_ptr<LHEEventProduct> lheevt(new LHEEventProduct(hepeup_));
  //  iEvent.put(lherun);
    iEvent.put(lheevt);
-
+   ii ++;
 }
 
 void HepMC2LHEConverter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
