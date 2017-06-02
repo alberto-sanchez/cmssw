@@ -4,7 +4,6 @@
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/one/EDProducer.h"
-//#include "FWCore/Framework/interface/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/Run.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -25,9 +24,7 @@ class HepMC2LHEConverter : public edm::one::EDProducer<edm::one::WatchRuns,edm::
   virtual void beginRun(const edm::Run &, const edm::EventSetup&) override;
   virtual void beginRunProduce(edm::Run &, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, const edm::EventSetup&) override;
-//  virtual void endRunProduce(edm::Run&, const edm::EventSetup&) override;
   virtual void produce(edm::Event&, const edm::EventSetup&) override;
- // static void fillDescriptions(edm::ConfigurationDescriptions&);
  private:
   LHERunInfoProduct::Header custom_slha();
 
@@ -50,45 +47,18 @@ HepMC2LHEConverter::HepMC2LHEConverter(const edm::ParameterSet &p) {
     ii = 0;
     newRun = false;
     write_lheout=false;
-    std::string lhe_ouputfile = "test.lhe";
+    std::string lhe_ouputfile = p.getUntrackedParameter<std::string>("lhe_outputfilename","");
     if (lhe_ouputfile !=""){
      write_lheout=true;
      file.open(lhe_ouputfile, std::fstream::out | std::fstream::trunc);
     }
+    heprup_ = new lhef::HEPRUP();
 }
 
 HepMC2LHEConverter::~HepMC2LHEConverter() {}
 
 void HepMC2LHEConverter::beginRun(const edm::Run & run, const edm::EventSetup& es ) {
-	/*
-  //... get the event -- infrmation about beam
-  edm::Handle<edm::HepMCProduct> HepMCevent;
-  run.getByLabel(_fSourceTag,HepMCevent);
-
-  HepMC::GenEvent *evt = new HepMC::GenEvent(*HepMCevent->GetEvent());
-  heprup_ = new lhef::HEPRUP();
-  heprup_->NPRUP = 1;     // should only be one process
-  int ibeam = 1;
-  for (HepMC::GenEvent::particle_const_iterator p = evt->particles_begin(); p != evt->particles_end(); ++p) {
-     if ((*p)->status() == 4) {
-        if (ibeam == 1) { 
-           heprup_->IDBMUP.first = (*p)->pdg_id();
-           heprup_->EBMUP.first = (*p)->momentum().e();
-        } else {
-           heprup_->IDBMUP.second = (*p)->pdg_id();
-           heprup_->EBMUP.second = (*p)->momentum().e();
-        }   
-        ibeam++;
-     }
-     if (ibeam > 2) break;
-  }
-  //std::auto_ptr<LHERunInfoProduct> lherun(new LHERunInfoProduct(*heprup_));
-  //run.put(lherun);  
-  //
-  */
-  if (ii==0) heprup_ = new lhef::HEPRUP();
   newRun = true;
-  std::cout << "beginRun " << ii <<std::endl;
 }
 
 void HepMC2LHEConverter::beginRunProduce(edm::Run & run, edm::EventSetup const & es ) {
@@ -111,7 +81,6 @@ void HepMC2LHEConverter::beginRunProduce(edm::Run & run, edm::EventSetup const &
   if (write_lheout) std::copy(lherun->begin(), lherun->end(), std::ostream_iterator<std::string>(file));
   run.put(lherun);
   lherun.reset();
-  std::cout << "beginRunproduce " << ii << std::endl;
 }
 
 void HepMC2LHEConverter::endRun(const edm::Run &run, const edm::EventSetup& es ) {
@@ -119,13 +88,7 @@ void HepMC2LHEConverter::endRun(const edm::Run &run, const edm::EventSetup& es )
       file << LHERunInfoProduct::endOfFile();
       file.close();
   }
-  std::cout << "endRun " << ii << std::endl;
 }
-
-//void HepMC2LHEConverter::endRunProduce(edm::Run &run, const edm::EventSetup& es ) {
- // std::auto_ptr<LHERunInfoProduct> lherun(new LHERunInfoProduct(*heprup_));
- // run.put(lherun);
-//}
 
 void HepMC2LHEConverter::produce(edm::Event & iEvent, const edm::EventSetup & es) {
 
@@ -170,14 +133,7 @@ void HepMC2LHEConverter::produce(edm::Event & iEvent, const edm::EventSetup & es
       hepeup_.VTIMUP[particleindex] = 0.;
       hepeup_.ICOLUP[particleindex].first = 0;
       hepeup_.ICOLUP[particleindex].second = 0;
- 
-      /*hepeup_.IDUP.push_back((*p)->pdg_id());
-      hepeup_.ISTUP.push_back((*p)->status());
-      lhef::HEPEUP::FiveVector pup_ = {{(*p)->momentum().px(),(*p)->momentum().py(),(*p)->momentum().pz(),(*p)->momentum().e(),(*p)->generated_mass()}};
-      hepeup_.PUP.push_back(pup_);     */
    }
-   //hepeup_.NUP = nup_;
-   //std::cout << nup_ << " " << hepeup_.IDUP.size() << std::endl;
    newRun = false;
    //... store output
    std::auto_ptr<LHEEventProduct> lheevt(new LHEEventProduct(hepeup_,1.));
@@ -194,14 +150,5 @@ LHERunInfoProduct::Header HepMC2LHEConverter::custom_slha() {
    slhah.addLine("######################################################################\n");
    return slhah;
 }
-
-/*
-void HepMC2LHEConverter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
-  edm::ParameterSetDescription desc;
-  desc.setUnknown();
-  descriptions.addDefault(desc);
-}*/
-
-//}
 
 DEFINE_FWK_MODULE(HepMC2LHEConverter);

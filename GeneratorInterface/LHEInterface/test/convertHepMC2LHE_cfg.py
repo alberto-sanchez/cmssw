@@ -11,6 +11,7 @@ process.source = cms.Source("PoolSource",
 )
 
 process.load("GeneratorInterface.LHEInterface.HepMC2LHEConverter_cfi")
+process.HepMC2LHEConverter.lhe_outputfilename = cms.untracked.string('out.lhe')
 
 process.out = cms.OutputModule("PoolOutputModule",
     splitLevel = cms.untracked.int32(0),
