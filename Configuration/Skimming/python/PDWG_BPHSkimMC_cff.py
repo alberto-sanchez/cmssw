@@ -14,7 +14,7 @@ oniaSelectedMuons = cms.EDFilter('PATMuonSelector',
                     ' && innerTrack.quality(\"highPurity\")'
                     ' && ((abs(eta) <= 0.9 && pt > 2.5) || (0.9 < abs(eta) <= 2.4 && pt > 1.5))'
    ),
-   filter = cms.bool(True)
+   filter = cms.bool(False)
 )
 
 # tracks
@@ -39,12 +39,6 @@ onia2MuMuPAT = cms.EDProducer('Onia2MuMuPAT',
    resolvePileUpAmbiguity = cms.bool(True)
 )
 
-onia2MuMuPATCounter = cms.EDFilter('CandViewCountFilter',
-      src = cms.InputTag('onia2MuMuPAT'),
-      minNumber = cms.uint32(1),
-      filter = cms.bool(True)
-   )
-
 # make photon candidate conversions for P-wave studies
 from HeavyFlavorAnalysis.Onia2MuMu.OniaPhotonConversionProducer_cfi import PhotonCandidates as oniaPhotonCandidates
 
@@ -52,7 +46,7 @@ from HeavyFlavorAnalysis.Onia2MuMu.OniaPhotonConversionProducer_cfi import Photo
 from HeavyFlavorAnalysis.Onia2MuMu.OniaAddV0TracksProducer_cfi import *
 
 # Pick branches you want to keep
-BPHSkim_EventContent = cms.PSet(
+BPHSkimMC_EventContent = cms.PSet(
      outputCommands = cms.untracked.vstring(
                      'drop *',
                      'keep recoVertexs_offlinePrimaryVertices_*_*',
@@ -66,16 +60,17 @@ BPHSkim_EventContent = cms.PSet(
                      'keep *_oniaPhotonCandidates_*_*',
                      'keep *_onia2MuMuPAT_*_*',
                      'keep *_oniaV0Tracks_*_*',
-                     'keep PileupSummaryInfos_*_*_*'
+                     'keep PileupSummaryInfos_*_*_*',
+                     'keep *_genParticles_*_SIM',
+                     'keep GenEventInfoProduct_generator_*_SIM'
      )
 )
 
-BPHSkimSequence = cms.Sequence(
-            oniaPATMuonsWithTriggerSequence *
-	    oniaSelectedMuons *
-            onia2MuMuPAT *
-	    onia2MuMuPATCounter *
-	    oniaPhotonCandidates *
-	    oniaV0Tracks *
-	    oniaSelectedTracks
+BPHSkimMCSequence = cms.Sequence(
+        oniaPATMuonsWithTriggerSequence *
+        oniaSelectedMuons *
+        onia2MuMuPAT *
+        oniaPhotonCandidates *
+        oniaV0Tracks *
+        oniaSelectedTracks
 )
