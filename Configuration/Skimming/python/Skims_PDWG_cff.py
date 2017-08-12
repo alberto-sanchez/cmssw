@@ -76,7 +76,7 @@ SKIMStreamevtSplitSkimP4 = cms.FilteredStream(
 
 #####################
 
-from Configuration.Skimming.PDWG_BPHSkimMC_cff import *
+from Configuration.Skimming.PDWG_BPHSkim_cff import *
 BPHSkimMCPath = cms.Path(BPHSkimMCSequence)
 SKIMStreamBPHSkimMC = cms.FilteredStream(
     responsible = 'PDWG',
@@ -87,11 +87,6 @@ SKIMStreamBPHSkimMC = cms.FilteredStream(
     dataTier = cms.untracked.string('USER')
     )
 
-#####################
-
-#####################
-
-from Configuration.Skimming.PDWG_BPHSkim_cff import *
 BPHSkimPath = cms.Path(BPHSkimSequence)
 SKIMStreamBPHSkim = cms.FilteredStream(
     responsible = 'PDWG',
