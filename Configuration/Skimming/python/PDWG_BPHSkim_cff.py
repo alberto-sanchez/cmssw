@@ -1,7 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Reconstruction_cff import *
-
 # muons with trigger info
 from HeavyFlavorAnalysis.Onia2MuMu.oniaPATMuonsWithTrigger_cff import *
 oniaSelectedMuons = cms.EDFilter('PATMuonSelector',
@@ -14,7 +13,7 @@ oniaSelectedMuons = cms.EDFilter('PATMuonSelector',
                     ' && innerTrack.quality(\"highPurity\")'
                     ' && ((abs(eta) <= 0.9 && pt > 2.5) || (0.9 < abs(eta) <= 2.4 && pt > 1.5))'
    ),
-   filter = cms.bool(True)
+   filter = cms.bool(False)
 )
 
 # tracks
@@ -52,6 +51,36 @@ from HeavyFlavorAnalysis.Onia2MuMu.OniaPhotonConversionProducer_cfi import Photo
 from HeavyFlavorAnalysis.Onia2MuMu.OniaAddV0TracksProducer_cfi import *
 
 # Pick branches you want to keep
+BPHSkimMC_EventContent = cms.PSet(
+     outputCommands = cms.untracked.vstring(
+                     'drop *',
+                     'keep recoVertexs_offlinePrimaryVertices_*_*',
+                     'keep *_offlineBeamSpot_*_*',
+                     'keep *_TriggerResults_*_HLT',
+                     'keep *_hltGtStage2ObjectMap_*_HLT',
+                     'keep *_hltTriggerSummaryAOD_*_HLT',
+                     'keep *_gmtStage2Digis_Muon_RECO',
+                     'keep *_gtDigis_*_RECO',
+                     'keep *_oniaSelectedTracks_*_*',
+                     'keep *_oniaPhotonCandidates_*_*',
+                     'keep *_onia2MuMuPAT_*_*',
+                     'keep *_oniaV0Tracks_*_*',
+                     'keep PileupSummaryInfos_*_*_*',
+                     'keep *_genParticles_*_SIM',
+                     'keep GenEventInfoProduct_generator_*_SIM'
+     )
+)
+
+BPHSkimMCSequence = cms.Sequence(
+        oniaPATMuonsWithTriggerSequence *
+        oniaSelectedMuons *
+        onia2MuMuPAT *
+        oniaPhotonCandidates *
+        oniaV0Tracks *
+        oniaSelectedTracks
+)
+
+# Pick branches you want to keep
 BPHSkim_EventContent = cms.PSet(
      outputCommands = cms.untracked.vstring(
                      'drop *',
@@ -71,11 +100,11 @@ BPHSkim_EventContent = cms.PSet(
 )
 
 BPHSkimSequence = cms.Sequence(
-            oniaPATMuonsWithTriggerSequence *
-	    oniaSelectedMuons *
-            onia2MuMuPAT *
-	    onia2MuMuPATCounter *
-	    oniaPhotonCandidates *
-	    oniaV0Tracks *
-	    oniaSelectedTracks
+        oniaPATMuonsWithTriggerSequence *
+        oniaSelectedMuons *
+        onia2MuMuPAT *
+        onia2MuMuPATCounter *
+        oniaPhotonCandidates *
+        oniaV0Tracks *
+        oniaSelectedTracks
 )

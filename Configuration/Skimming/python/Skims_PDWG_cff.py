@@ -8,23 +8,17 @@ skimRecoContent.outputCommands.append("drop *_MEtoEDMConverter_*_*")
 skimRecoContent.outputCommands.append("drop *_*_*_SKIM")
 
 #####################
-
-from Configuration.Skimming.PDWG_BPHSkimMC_cff import *
-BPHSkimMCPath = cms.Path(BPHSkimMCSequence)
+from Configuration.Skimming.PDWG_BPHSkim_cff import *
+BPHSkimPathMC = cms.Path(BPHSkimMCSequence)
 SKIMStreamBPHSkimMC = cms.FilteredStream(
     responsible = 'PDWG',
     name = 'BPHSkimMC',
-    paths = (BPHSkimMCPath),
+    paths = (BPHSkimPathMC),
     content = BPHSkimMC_EventContent.outputCommands,
     selectEvents = cms.untracked.PSet(),
     dataTier = cms.untracked.string('USER')
     )
 
-#####################
-
-#####################
-
-from Configuration.Skimming.PDWG_BPHSkim_cff import *
 BPHSkimPath = cms.Path(BPHSkimSequence)
 SKIMStreamBPHSkim = cms.FilteredStream(
     responsible = 'PDWG',
@@ -34,7 +28,6 @@ SKIMStreamBPHSkim = cms.FilteredStream(
     selectEvents = cms.untracked.PSet(),
     dataTier = cms.untracked.string('USER')
     )
-
 #####################
 
 from Configuration.Skimming.PDWG_DiJetAODSkim_cff import *
