@@ -54,30 +54,57 @@ if [ "$use_gridpack_env" = false -a -n "$scram_arch_version" -a -n  "$cmssw_vers
   cd $LHEWORKDIR
 fi
 
-if [[ -d lheevent ]]
-    then
-    echo 'lheevent directory found'
-    echo 'Setting up the environment'
-    rm -rf lheevent
+##########################
+# multithread loop start
+##########################
+for (( thread=0; thread<$ncpu; thread++ ))
+do
+
+    if [[ -d lheevent_$thread ]]
+        then
+        echo 'lheevent_$thread directory found'
+        echo 'Setting up the environment'
+        rm -rf lheevent_$thread
+    fi
+    mkdir lheevent_$thread; cd lheevent_$thread
+
+    #untar the tarball directly from cvmfs
+    tar -xaf ${path} 
+
+    #generate events
+    ./runcmsgrid.sh $nevt $rnum 1 ${@:5} &
+    
+    cd $LHEWORKDIR
+
+done
+##########################
+# multithread loop end
+##########################
+
+wait # wait for all the subprocesses to finish
+
+for (( thread=0; thread<$ncpu; thread++ ))
+do
+    mv lheevent_$thread/cmsgrid_final.lhe $LHEWORKDIR/cmsgrid_final_$thread.lhe
+done
+
+# merge multiple lhe files if needed
+ls -lrt $LHEWORKDIR/cmsgrid_final_*.lhe
+if [  $thread -gt "1" ]; then
+    echo "Merging files and deleting unmerged ones"
+    cp /cvmfs/cms.cern.ch/phys_generator/gridpacks/lhe_merger/merge.pl ./
+    chmod 755 merge.pl
+    ./merge.pl $LHEWORKDIR/cmsgrid_final_*.lhe cmsgrid_final.lhe banner.txt
+    rm $LHEWORKDIR/cmsgrid_final_*.lhe banner.txt;
+else
+    mv $LHEWORKDIR/cmsgrid_final_$thread.lhe $LHEWORKDIR/cmsgrid_final.lhe
 fi
-mkdir lheevent; cd lheevent
 
-#untar the tarball directly from cvmfs
-tar -xaf ${path} 
-
-# If TMPDIR is unset, set it to the condor scratch area if present
-# and fallback to /tmp
-export TMPDIR=${TMPDIR:-${_CONDOR_SCRATCH_DIR:-/tmp}}
-
-#generate events
-./runcmsgrid.sh $nevt $rnum $ncpu ${@:5}
-
-mv cmsgrid_final.lhe $LHEWORKDIR/
 
 cd $LHEWORKDIR
 
 #cleanup working directory (save space on worker node for edm output)
-rm -rf lheevent
+rm -rf lheevent_*
 
 exit 0
 
